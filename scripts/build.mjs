@@ -42,7 +42,6 @@ const angleDir = Path.join(WORK, 'angle')
 console.log('Fetching ANGLE source...')
 await Fs.promises.mkdir(angleDir, { recursive: true })
 
-const gclientSpec = `solutions = [{"name": ".", "url": "https://chromium.googlesource.com/angle/angle.git", "deps_file": "DEPS", "managed": False, "custom_vars": {}}]`
 const gclient = platform === 'win32' ? 'gclient.bat' : 'gclient'
 
 execSync(`git clone https://chromium.googlesource.com/angle/angle.git ${angleDir}`, {
@@ -50,12 +49,20 @@ execSync(`git clone https://chromium.googlesource.com/angle/angle.git ${angleDir
 	env,
 	timeout: 300000,
 })
-execSync(`${gclient} config --spec "${gclientSpec}"`, {
-	stdio: 'inherit',
-	cwd: angleDir,
-	env,
-	timeout: 120000,
-})
+
+// Write .gclient file directly (avoids shell escaping issues with --spec)
+const gclientConfig = `solutions = [
+  {
+    "name": ".",
+    "url": "https://chromium.googlesource.com/angle/angle.git",
+    "deps_file": "DEPS",
+    "managed": False,
+    "custom_vars": {},
+  },
+]
+`
+await Fs.promises.writeFile(Path.join(angleDir, '.gclient'), gclientConfig)
+
 execSync(`${gclient} sync --no-history --shallow`, {
 	stdio: 'inherit',
 	cwd: angleDir,
