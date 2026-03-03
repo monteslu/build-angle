@@ -1,0 +1,62 @@
+name: Build ANGLE
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+            platform: darwin
+          - os: macos-13
+            arch: x64
+            platform: darwin
+          - os: windows-2022
+            arch: x64
+            platform: win32
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install npm deps
+        run: npm install
+
+      - name: Build ANGLE
+        run: npm run build
+        timeout-minutes: 90
+
+      - name: List output
+        run: |
+          echo "=== Libraries ==="
+          ls -la out/lib/
+          echo "=== Headers ==="
+          find out/include -name '*.h' | sort
+
+      - name: Upload release asset
+        run: npm run upload
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact (for debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: angle-${{ matrix.platform }}-${{ matrix.arch }}
+          path: out/
+          retention-days: 7

@@ -1,0 +1,22 @@
+{
+  "name": "build-angle",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Build ANGLE (libEGL + libGLESv2) for macOS and Windows, publish as GitHub Release assets",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/nicholasgasior/build-angle.git"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "upload": "node scripts/upload-release.mjs"
+  },
+  "dependencies": {
+    "tar": "^7.4.3"
+  },
+  "config": {
+    "angle": {
+      "branch": "main"
+    }
+  }
+}
