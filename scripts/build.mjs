@@ -31,13 +31,16 @@ const env = {
 	...process.env,
 	PATH: `${depotToolsDir}${Path.delimiter}${process.env.PATH}`,
 	DEPOT_TOOLS_UPDATE: '0',
+	VPYTHON_BYPASS: 'manually_managed',
+	DEPOT_TOOLS_WIN_TOOLCHAIN: '0',
 }
 
 // Fetch ANGLE source
 const angleDir = Path.join(WORK, 'angle')
 console.log('Fetching ANGLE source...')
 await Fs.promises.mkdir(angleDir, { recursive: true })
-execSync('fetch angle', {
+const fetchCmd = platform === 'win32' ? 'fetch.bat angle' : 'fetch angle'
+execSync(fetchCmd, {
 	stdio: 'inherit',
 	cwd: angleDir,
 	env,
@@ -95,7 +98,8 @@ console.log('Generating build files...')
 await Fs.promises.mkdir(buildDir, { recursive: true })
 await Fs.promises.writeFile(Path.join(buildDir, 'args.gn'), gnArgsStr + '\n')
 
-execSync('gn gen out/Release', {
+const gnCmd = platform === 'win32' ? 'gn.bat gen out/Release' : 'gn gen out/Release'
+execSync(gnCmd, {
 	stdio: 'inherit',
 	cwd: angleSrc,
 	env,
@@ -103,7 +107,10 @@ execSync('gn gen out/Release', {
 
 // Build
 console.log('Building ANGLE...')
-execSync('autoninja -C out/Release libEGL libGLESv2', {
+const ninjaCmd = platform === 'win32'
+	? 'autoninja.bat -C out/Release libEGL libGLESv2'
+	: 'autoninja -C out/Release libEGL libGLESv2'
+execSync(ninjaCmd, {
 	stdio: 'inherit',
 	cwd: angleSrc,
 	env,
