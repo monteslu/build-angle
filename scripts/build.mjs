@@ -37,16 +37,30 @@ const env = {
 	GCLIENT_PY3: '1',
 }
 
-// Fetch ANGLE source
+// Fetch ANGLE source using gclient directly (avoids `fetch` issues on Windows)
 const angleDir = Path.join(WORK, 'angle')
 console.log('Fetching ANGLE source...')
 await Fs.promises.mkdir(angleDir, { recursive: true })
-const fetchCmd = platform === 'win32' ? 'fetch.bat angle' : 'fetch angle'
-execSync(fetchCmd, {
+
+const gclientSpec = `solutions = [{"name": ".", "url": "https://chromium.googlesource.com/angle/angle.git", "deps_file": "DEPS", "managed": False, "custom_vars": {}}]`
+const gclient = platform === 'win32' ? 'gclient.bat' : 'gclient'
+
+execSync(`git clone https://chromium.googlesource.com/angle/angle.git ${angleDir}`, {
+	stdio: 'inherit',
+	env,
+	timeout: 300000,
+})
+execSync(`${gclient} config --spec "${gclientSpec}"`, {
 	stdio: 'inherit',
 	cwd: angleDir,
 	env,
-	timeout: 600000, // 10 min for fetch
+	timeout: 120000,
+})
+execSync(`${gclient} sync --no-history --shallow`, {
+	stdio: 'inherit',
+	cwd: angleDir,
+	env,
+	timeout: 600000, // 10 min
 })
 
 // Install build deps on Linux
