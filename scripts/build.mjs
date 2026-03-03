@@ -33,6 +33,8 @@ const env = {
 	DEPOT_TOOLS_UPDATE: '0',
 	VPYTHON_BYPASS: 'manually_managed',
 	DEPOT_TOOLS_WIN_TOOLCHAIN: '0',
+	GIT_CACHE_PATH: '',
+	GCLIENT_PY3: '1',
 }
 
 // Fetch ANGLE source
