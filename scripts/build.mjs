@@ -27,14 +27,22 @@ execSync(`git clone https://chromium.googlesource.com/chromium/tools/depot_tools
 	stdio: 'inherit',
 })
 
+// Find the actual PATH key (Windows uses 'Path', not 'PATH')
+const pathKey = Object.keys(process.env).find(k => k.toUpperCase() === 'PATH') || 'PATH'
+
 const env = {
 	...process.env,
-	PATH: `${depotToolsDir}${Path.delimiter}${process.env.PATH}`,
-	DEPOT_TOOLS_UPDATE: '0',
-	VPYTHON_BYPASS: 'manually_managed',
+	[pathKey]: `${depotToolsDir}${Path.delimiter}${process.env[pathKey]}`,
 	DEPOT_TOOLS_WIN_TOOLCHAIN: '0',
-	GIT_CACHE_PATH: '',
 	GCLIENT_PY3: '1',
+}
+
+// Bootstrap depot_tools (downloads cipd packages, Python, gn, etc.)
+console.log('Bootstrapping depot_tools...')
+if (platform === 'win32') {
+	execSync('gclient.bat --version', { stdio: 'inherit', env, timeout: 300000 })
+} else {
+	execSync('gclient --version', { stdio: 'inherit', env, timeout: 300000 })
 }
 
 // Fetch ANGLE source using gclient directly (avoids `fetch` issues on Windows)
